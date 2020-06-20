@@ -7,12 +7,17 @@ console.log('workflow: %o', workflow);
 class App extends React.Component {
   constructor(props) {
     super(props);
+    this.steps = [];
     this.state = {
       stepNumber: 0,
       stepValues: [],
     }
+    this.handleChange = this.handleChange.bind(this)
+    this.handleSubmit = this.handleSubmit.bind(this)
+  }
+
+  componentDidMount() {
     // Flattening nested steps
-    this.steps = [];
     workflow.forEach((step) => {
       this.steps.push(step)
       if (step.options) {
@@ -24,6 +29,13 @@ class App extends React.Component {
       }
     })
     console.log('steps: ', this.steps)
+    const stepValues = this.steps.map(
+      s => s.options ? s.options[0].toLowerCase() : ''
+    )
+    console.log('stepValues: ', stepValues)
+    this.setState({
+      stepValues,
+    })
   }
 
   handleClick(stepNumber) {
@@ -32,25 +44,37 @@ class App extends React.Component {
     })
   }
 
-  handleChange(stepNumber, value) {
-    // const input
-    // this.setState({
-    //   value:
-    // })
+  handleChange(event) {
+    console.log(`handleChange: value ${event.target.value} stepNumber ${this.state.stepNumber}`)
+    const stepValues = this.state.stepValues.slice();
+    stepValues[this.state.stepNumber] = event.target.value;
+    this.setState({
+      stepValues,
+    })
+  }
+
+  handleSubmit() {
+    alert(this.state.stepValues)
   }
 
   render() {
-    const steps = this.steps.map((step, index) => {
+    const steps = this.steps.map((step, stepNumber) => {
       return (
-        <li key={index}
-            onClick={() => this.handleClick(index)}
+        <li key={stepNumber}
+            className={stepNumber === this.state.stepNumber ? 'selected' : ''}
+            onClick={() => this.handleClick(stepNumber)}
         >
           {step.step}
         </li>
       );
     });
     const input = (() => {
+      if (this.state.stepNumber >= this.steps.length) {
+        console.log('stepNumber too big')
+        return;
+      }
       const step = this.steps[this.state.stepNumber];
+      const stepValue = this.state.stepValues[this.state.stepNumber]
       const [
         // eslint-disable-next-line
         unused,
@@ -59,7 +83,7 @@ class App extends React.Component {
       ] = /^(.*)\((.*)\)/.exec(step.step);
       // Assuming format 'stepName(inputType)'
       console.log(`name ${stepName}, type ${inputType}`)
-      const lowercaseName = stepName.toLowerCase();
+      const lowercaseStepName = stepName.toLowerCase();
       const stepOptions = step.options && step.options.filter(
         stepOption => typeof stepOption === 'string'
       )
@@ -76,8 +100,12 @@ class App extends React.Component {
           })
           return (
             <div className="input">
-              <label htmlFor={lowercaseName}>{stepName}</label>
-              <select id={lowercaseName}>
+              <label htmlFor={lowercaseStepName}>{stepName}</label>
+              <select
+                id={lowercaseStepName}
+                value={stepValue}
+                onChange={this.handleChange}
+              >
                 {options}
               </select>
             </div>
@@ -90,10 +118,13 @@ class App extends React.Component {
               <div key={lowercaseOption}>
                 <input
                   type="radio"
-                  id={lowercaseOption}
+                  id={stepOption}
+                  name={lowercaseStepName}
                   value={lowercaseOption}
+                  checked={lowercaseOption === stepValue}
+                  onChange={this.handleChange}
                 />
-                <label htmlFor={lowercaseOption}>
+                <label htmlFor={stepOption}>
                   {stepOption}
                 </label>
               </div>
@@ -108,9 +139,10 @@ class App extends React.Component {
         case 'checkbox':
           return (
             <div>
-              <label htmlFor={lowercaseName}>{stepName}</label>
-              <input id={lowercaseName}
-                     type={inputType}/>
+              <label htmlFor={lowercaseStepName}>{stepName}</label>
+              <input
+                id={lowercaseStepName}
+                type={inputType}/>
             </div>
           );
         case 'text':
@@ -130,6 +162,9 @@ class App extends React.Component {
         </ol>
         <div className="input">
           {input}
+          <button onClick={this.handleSubmit}>
+            Submit
+          </button>
         </div>
       </div>
     );
