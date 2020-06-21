@@ -1,8 +1,13 @@
 import React from 'react';
 import './App.scss';
 import workflow from './workflow.json';
-import {parseStepNameAndType, isStepActivated} from "./Common";
+import {
+  parseStepNameAndType,
+  isStepActivated,
+  getNextStep,
+} from "./Common";
 import {Input} from './Input'
+import {StepList} from "./StepList";
 
 console.log('workflow: %o', workflow);
 
@@ -70,44 +75,48 @@ class App extends React.Component {
   handleStepClick(stepNumber) {
     const currentStep = this.steps[this.state.stepNumber]
     const inputType = parseStepNameAndType(currentStep.nameAndType).pop();
-    const nextStepsCompleted = this.state.stepsCompleted.slice();
+    const stepsCompleted = this.state.stepsCompleted.slice();
     if (inputType === 'checkbox') {
-      // Just viewing is considered completing
-      nextStepsCompleted[this.state.stepNumber] = true;
+      // Considering just viewing as completed
+      stepsCompleted[this.state.stepNumber] = true;
     }
     this.setState({
-      stepsCompleted: nextStepsCompleted,
+      stepsCompleted,
       stepNumber,
     })
   }
 
   handleChange(event) {
     console.log(`handleChange: value ${event.target.value} stepNumber ${this.state.stepNumber}`)
-    const nextStepValues = this.state.stepValues.slice();
-    nextStepValues[this.state.stepNumber] = event.target.value;
-    const nextStepsCompleted = this.state.stepsCompleted.slice();
+    const stepValues = this.state.stepValues.slice();
+    stepValues[this.state.stepNumber] = event.target.value;
+    const stepsCompleted = this.state.stepsCompleted.slice();
     // Considering truthy values as completed
-    nextStepsCompleted[this.state.stepNumber] = !!event.target.value;
+    stepsCompleted[this.state.stepNumber] = !!event.target.value;
     this.setState({
-      stepValues: nextStepValues,
-      stepsCompleted: nextStepsCompleted,
+      stepValues,
+      stepsCompleted,
+      stepNumber: getNextStep(
+        this.state.stepNumber, this.steps, stepValues
+      )
     })
   }
 
   handleCheckboxChange(e) {
-    const nextStepValues = this.state.stepValues.slice();
-    let nextStepValue = nextStepValues[this.state.stepNumber]
+    const stepValues = this.state.stepValues.slice();
+    const stepValue = stepValues[this.state.stepNumber]
     const step = this.steps[this.state.stepNumber]
     const optionIndex = step.options.findIndex(
       o => o.toLowerCase() === e.target.value
     )
-    nextStepValue[optionIndex] = e.target.checked ? e.target.value : ''
-    nextStepValues[this.state.stepNumber] = nextStepValue
-    const nextStepsCompleted = this.state.stepsCompleted.slice()
-    nextStepsCompleted[this.state.stepNumber] = true;
+    stepValue[optionIndex] = e.target.checked ?
+      e.target.value : ''
+    stepValues[this.state.stepNumber] = stepValue
+    const stepsCompleted = this.state.stepsCompleted.slice()
+    stepsCompleted[this.state.stepNumber] = true;
     this.setState({
-      stepValues: nextStepValues,
-      stepsCompleted: nextStepsCompleted,
+      stepValues,
+      stepsCompleted,
     })
   }
 
@@ -122,41 +131,16 @@ class App extends React.Component {
       console.log('stepNumber too big')
       return null;
     }
-    const steps = this.steps.map((step, stepNumber) => {
-      const getClassNames = () => {
-        const r = []
-        if (stepNumber === this.state.stepNumber) {
-          r.push('selected')
-        }
-        if (!isStepActivated(stepNumber, this.steps, this.state.stepValues)) {
-          r.push('hidden')
-        }
-        return r.join(' ');
-      }
-      const stepValue = this.state.stepValues[stepNumber]
-      // String, otherwise assuming array of strings
-      const displayValue = typeof stepValue === 'string' ? stepValue : stepValue.join(', ')
-      return (
-        <li key={parseStepNameAndType(step.nameAndType).shift()}
-            className={getClassNames()}
-            onClick={() => this.handleStepClick(stepNumber)}
-        >
-          <span className="checkbox-label">
-            <input
-              type="checkbox"
-              readOnly
-              checked={this.state.stepsCompleted[stepNumber]}
-            />
-            {parseStepNameAndType(step.nameAndType).shift()}
-          </span>
-          ({this.state.stepsCompleted[stepNumber] ? displayValue : 'select'})
-        </li>
-      );
-    });
     return (
       <div className="App">
         <ol className="steps">
-          {steps}
+          <StepList
+            steps={this.steps}
+            stepNumber={this.state.stepNumber}
+            stepValues={this.state.stepValues}
+            stepsCompleted={this.state.stepsCompleted}
+            handleStepClick={this.handleStepClick}
+          />
         </ol>
         <div className="input">
           <Input

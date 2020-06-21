@@ -17,3 +17,17 @@ export const isStepActivated = (stepNumber, steps, stepValues) => {
   }
   return true; // Otherwise active
 }
+
+export const getNextStep = (stepNumber, steps, stepValues) => {
+  if (stepNumber === steps.length - 1) {
+    return stepNumber;
+  }
+  let nextStepNumber = stepNumber;
+  do {
+    nextStepNumber++;
+    if (isStepActivated(nextStepNumber, steps, stepValues)) {
+      break;
+    }
+  } while (nextStepNumber < steps.length - 1);
+  return nextStepNumber;
+}

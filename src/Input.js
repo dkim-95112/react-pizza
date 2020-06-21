@@ -4,8 +4,7 @@ import {parseStepNameAndType} from "./Common";
 export function Input(props) {
   const step = props.steps[props.stepNumber];
   const [stepName, inputType] = parseStepNameAndType(step.nameAndType);
-  console.log(`name ${stepName}, type ${inputType}`)
-  const lowercaseStepName = stepName.toLowerCase();
+  console.log(`Input: name ${stepName}, type ${inputType}`)
   const stepValue = props.stepValues[props.stepNumber]
   const stepOptions = step.options && step.options.filter(
     // Using only the string type options
@@ -26,11 +25,10 @@ export function Input(props) {
             <option value="">--Make selection</option>
             {
               stepOptions.map(stepOption => {
-                const lowercaseStepOption = stepOption.toLowerCase();
                 return (
                   <option
                     key={stepOption}
-                    value={lowercaseStepOption}
+                    value={stepOption.toLowerCase()}
                   >{stepOption}</option>
                 )
               })
@@ -45,15 +43,14 @@ export function Input(props) {
           <h1>{stepName}</h1>
           {
             stepOptions.map(stepOption => {
-              const lowercaseStepOption = stepOption.toLowerCase();
               return (
-                <div key={lowercaseStepOption}>
+                <div key={stepOption}>
                   <input
                     type="radio"
                     id={stepOption}
-                    name={lowercaseStepName}
-                    value={lowercaseStepOption}
-                    checked={lowercaseStepOption === stepValue}
+                    name={stepName.toLowerCase()}
+                    value={stepOption.toLowerCase()}
+                    checked={stepOption.toLowerCase() === stepValue}
                     onChange={props.handleChange}
                   />
                   <label htmlFor={stepOption}>
@@ -72,15 +69,14 @@ export function Input(props) {
           <h1>{stepName}</h1>
           {
             stepOptions.map((stepOption, optionIndex) => {
-              const lowercaseStepOption = stepOption.toLowerCase();
               return (
                 <div key={stepOption}>
                   <input
                     type="checkbox"
                     id={stepOption}
-                    value={lowercaseStepOption}
-                    name={lowercaseStepName}
-                    checked={stepValue[optionIndex]} // Assuming 'option' or false
+                    value={stepOption.toLowerCase()}
+                    name={stepName.toLowerCase()}
+                    checked={stepValue[optionIndex]} // Assuming 'option' or ''
                     onChange={props.handleCheckboxChange}
                   />
                   <label htmlFor={stepOption}>{stepOption}</label>
