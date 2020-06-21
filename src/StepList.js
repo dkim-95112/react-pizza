@@ -33,7 +33,7 @@ export function StepList(props) {
             />
             {stepName}
           </span>
-        ({props.stepsCompleted[stepNumber] ? displayValue : 'select'})
+        ({props.stepsCompleted[stepNumber] ? displayValue : '--select'})
       </li>
     );
   });
