@@ -1,6 +1,8 @@
 import React from 'react';
 import './App.scss';
 import workflow from './workflow.json';
+import {parseStepNameAndType, isStepActivated} from "./Common";
+import {Input} from './Input'
 
 console.log('workflow: %o', workflow);
 
@@ -11,8 +13,11 @@ class App extends React.Component {
     this.state = {
       stepNumber: 0,
       stepValues: [],
+      stepsCompleted: [],
     }
     this.handleChange = this.handleChange.bind(this)
+    this.handleCheckboxChange = this.handleCheckboxChange.bind(this)
+    this.handleStepClick = this.handleStepClick.bind(this)
     this.handleSubmit = this.handleSubmit.bind(this)
   }
 
@@ -21,148 +26,158 @@ class App extends React.Component {
     workflow.forEach((step) => {
       this.steps.push(step)
       if (step.options) {
+        let prevStringOption;
         step.options.forEach(option => {
+          if (typeof option === 'string') {
+            prevStringOption = option
+          }
           if (typeof option === 'object') {
-            this.steps.push(option)
+            // Assuming nested step object immediately follows string option
+            this.steps.push({
+              ...option,
+              activatedBy: {
+                nameAndType: step.nameAndType,
+                value: prevStringOption.toLowerCase(),
+              }
+            })
           }
         })
       }
     })
     console.log('steps: ', this.steps)
-    const stepValues = this.steps.map(
-      s => s.options ? s.options[0].toLowerCase() : ''
-    )
+    // Initializing step values
+    const stepValues = this.steps.map(s => {
+      const inputType = parseStepNameAndType(s.nameAndType).pop();
+      switch (inputType) {
+        case 'select':
+        case 'radio':
+        case 'text':
+          return '';
+        case 'checkbox':
+          return Array(s.options.length).fill('');
+        default:
+          console.error('shouldn\'t get here')
+          return '';
+      }
+    });
     console.log('stepValues: ', stepValues)
     this.setState({
       stepValues,
+      stepsCompleted: Array(stepValues.length).fill(false)
     })
   }
 
-  handleClick(stepNumber) {
+  handleStepClick(stepNumber) {
+    const currentStep = this.steps[this.state.stepNumber]
+    const inputType = parseStepNameAndType(currentStep.nameAndType).pop();
+    const nextStepsCompleted = this.state.stepsCompleted.slice();
+    if (inputType === 'checkbox') {
+      // Just viewing is considered completing
+      nextStepsCompleted[this.state.stepNumber] = true;
+    }
     this.setState({
+      stepsCompleted: nextStepsCompleted,
       stepNumber,
     })
   }
 
   handleChange(event) {
     console.log(`handleChange: value ${event.target.value} stepNumber ${this.state.stepNumber}`)
-    const stepValues = this.state.stepValues.slice();
-    stepValues[this.state.stepNumber] = event.target.value;
+    const nextStepValues = this.state.stepValues.slice();
+    nextStepValues[this.state.stepNumber] = event.target.value;
+    const nextStepsCompleted = this.state.stepsCompleted.slice();
+    // Considering truthy values as completed
+    nextStepsCompleted[this.state.stepNumber] = !!event.target.value;
     this.setState({
-      stepValues,
+      stepValues: nextStepValues,
+      stepsCompleted: nextStepsCompleted,
+    })
+  }
+
+  handleCheckboxChange(e) {
+    const nextStepValues = this.state.stepValues.slice();
+    let nextStepValue = nextStepValues[this.state.stepNumber]
+    const step = this.steps[this.state.stepNumber]
+    const optionIndex = step.options.findIndex(
+      o => o.toLowerCase() === e.target.value
+    )
+    nextStepValue[optionIndex] = e.target.checked ? e.target.value : ''
+    nextStepValues[this.state.stepNumber] = nextStepValue
+    const nextStepsCompleted = this.state.stepsCompleted.slice()
+    nextStepsCompleted[this.state.stepNumber] = true;
+    this.setState({
+      stepValues: nextStepValues,
+      stepsCompleted: nextStepsCompleted,
     })
   }
 
   handleSubmit() {
-    alert(this.state.stepValues)
+    alert(
+      JSON.stringify(this.state.stepValues)
+    )
   }
 
   render() {
+    if (this.state.stepNumber >= this.steps.length) {
+      console.log('stepNumber too big')
+      return null;
+    }
     const steps = this.steps.map((step, stepNumber) => {
+      const getClassNames = () => {
+        const r = []
+        if (stepNumber === this.state.stepNumber) {
+          r.push('selected')
+        }
+        if (!isStepActivated(stepNumber, this.steps, this.state.stepValues)) {
+          r.push('hidden')
+        }
+        return r.join(' ');
+      }
+      const stepValue = this.state.stepValues[stepNumber]
+      // String, otherwise assuming array of strings
+      const displayValue = typeof stepValue === 'string' ? stepValue : stepValue.join(', ')
       return (
-        <li key={stepNumber}
-            className={stepNumber === this.state.stepNumber ? 'selected' : ''}
-            onClick={() => this.handleClick(stepNumber)}
+        <li key={parseStepNameAndType(step.nameAndType).shift()}
+            className={getClassNames()}
+            onClick={() => this.handleStepClick(stepNumber)}
         >
-          {step.step}
+          <span className="checkbox-label">
+            <input
+              type="checkbox"
+              readOnly
+              checked={this.state.stepsCompleted[stepNumber]}
+            />
+            {parseStepNameAndType(step.nameAndType).shift()}
+          </span>
+          ({this.state.stepsCompleted[stepNumber] ? displayValue : 'select'})
         </li>
       );
     });
-    const input = (() => {
-      if (this.state.stepNumber >= this.steps.length) {
-        console.log('stepNumber too big')
-        return;
-      }
-      const step = this.steps[this.state.stepNumber];
-      const stepValue = this.state.stepValues[this.state.stepNumber]
-      const [
-        // eslint-disable-next-line
-        unused,
-        stepName,
-        inputType
-      ] = /^(.*)\((.*)\)/.exec(step.step);
-      // Assuming format 'stepName(inputType)'
-      console.log(`name ${stepName}, type ${inputType}`)
-      const lowercaseStepName = stepName.toLowerCase();
-      const stepOptions = step.options && step.options.filter(
-        stepOption => typeof stepOption === 'string'
-      )
-      switch (inputType) {
-        case 'select': {
-          const options = stepOptions.map(stepOption => {
-            const lowercaseOption = stepOption.toLowerCase();
-            return (
-              <option
-                key={lowercaseOption}
-                value={lowercaseOption}
-              >{stepOption}</option>
-            )
-          })
-          return (
-            <div className="input">
-              <label htmlFor={lowercaseStepName}>{stepName}</label>
-              <select
-                id={lowercaseStepName}
-                value={stepValue}
-                onChange={this.handleChange}
-              >
-                {options}
-              </select>
-            </div>
-          )
-        }
-        case 'radio': {
-          const options = stepOptions.map(stepOption => {
-            const lowercaseOption = stepOption.toLowerCase();
-            return (
-              <div key={lowercaseOption}>
-                <input
-                  type="radio"
-                  id={stepOption}
-                  name={lowercaseStepName}
-                  value={lowercaseOption}
-                  checked={lowercaseOption === stepValue}
-                  onChange={this.handleChange}
-                />
-                <label htmlFor={stepOption}>
-                  {stepOption}
-                </label>
-              </div>
-            )
-          })
-          return (
-            <div>
-              {options}
-            </div>
-          )
-        }
-        case 'checkbox':
-          return (
-            <div>
-              <label htmlFor={lowercaseStepName}>{stepName}</label>
-              <input
-                id={lowercaseStepName}
-                type={inputType}/>
-            </div>
-          );
-        case 'text':
-          return (
-            <div>
-              {stepName}
-            </div>
-          );
-        default:
-          console.error('Shouldn\'t get here')
-      }
-    })();
     return (
       <div className="App">
         <ol className="steps">
           {steps}
         </ol>
         <div className="input">
-          {input}
-          <button onClick={this.handleSubmit}>
+          <Input
+            steps={this.steps}
+            stepNumber={this.state.stepNumber}
+            stepValues={this.state.stepValues}
+            handleChange={this.handleChange}
+            handleCheckboxChange={this.handleCheckboxChange}
+          />
+          <button
+            onClick={this.handleSubmit}
+            // Disable unless all steps complete
+            disabled={
+              this.state.stepsCompleted.findIndex(
+                (isCompleted, stepNumber) => (
+                  isCompleted === false &&
+                  isStepActivated(stepNumber, this.steps, this.state.stepValues)
+                )
+              ) !== -1
+            }
+          >
             Submit
           </button>
         </div>

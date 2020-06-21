@@ -1,0 +1,48 @@
+.App {
+  display: flex;
+  padding: 10px;
+
+  .steps {
+    flex: 1;
+    padding: 10px 20px 10px 10px;
+    border: 1px solid black;
+    border-radius: 6px;
+    list-style: none;
+
+    li {
+      position: relative;
+      cursor: pointer;
+      opacity: 0.5;
+      border: 1px solid black;
+      border-radius: 6px;
+      &.selected {
+        opacity: 1;
+        &::after {
+          content: "->";
+          position: absolute;
+          right: -20px;
+        }
+      }
+      .checkbox-label {
+        white-space: nowrap;
+      }
+    }
+  }
+  .input {
+    position: relative;
+    flex: 2;
+    display: flex;
+    justify-content: center;
+    padding: 10px;
+    border: 1px solid black;
+    border-radius: 6px;
+  }
+  button {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+  }
+  .hidden {
+    display: none;
+  }
+}

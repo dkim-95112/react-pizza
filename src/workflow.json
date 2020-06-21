@@ -1,0 +1,68 @@
+[
+  {
+    "nameAndType": "Crust(select)",
+    "options": [
+      "Original",
+      "Gluten-free"
+    ]
+  },
+  {
+    "nameAndType": "Sauce(select)",
+    "options": [
+      "Red sauce",
+      "White sauce",
+      {
+        "nameAndType": "Milk(radio)",
+        "options": [
+          "Dairy",
+          "Dairy-free"
+        ]
+      },
+      "Green pesto"
+    ]
+  },
+  {
+    "nameAndType": "Cheese(select)",
+    "options": [
+      "Mozzarella",
+      "Dairy-free cheese",
+      "Gorgonzola",
+      "Parmesan"
+    ]
+  },
+  {
+    "nameAndType": "Protein(select)",
+    "options": [
+      "Anchovies",
+      "Bacon",
+      "Beef",
+      "Chicken",
+      "Pepperoni"
+    ]
+  },
+  {
+    "nameAndType": "Veggies(checkbox)",
+    "options": [
+      "Artichokes",
+      "Arugula",
+      "Basil",
+      "Black Olives",
+      "Jalapenos",
+      "Mushrooms",
+      "Onions",
+      "Pineapple",
+      "Spinach",
+      "Romaine"
+    ]
+  },
+  {
+    "nameAndType": "Service(radio)",
+    "options": [
+      "Delivery",
+      "Carryout"
+    ]
+  },
+  {
+    "nameAndType": "Name(text)"
+  }
+]
