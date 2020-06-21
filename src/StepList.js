@@ -25,13 +25,15 @@ export function StepList(props) {
           className={getClassNames()}
           onClick={() => props.handleStepClick(stepNumber)}
       >
-        <input
-          id={stepName}
-          type="checkbox"
-          readOnly
-          checked={props.stepsCompleted[stepNumber]}
-        />
-        <label htmlFor={stepName}>{stepName}</label>
+        <span className="checkbox-label">
+          <input
+            id={stepName}
+            type="checkbox"
+            readOnly
+            checked={props.stepsCompleted[stepNumber]}
+          />
+          <label htmlFor={stepName}>{stepName}</label>
+        </span>
         ({props.stepsCompleted[stepNumber] ? displayValue : '--select'})
       </li>
     );
