@@ -1,5 +1,5 @@
 import React from "react";
-import {isStepActivated, parseStepNameAndType} from "./Common";
+import {isStepActivated, parseStepNameAndType} from "./common";
 
 export function StepList(props) {
   return props.steps.map((step, stepNumber) => {

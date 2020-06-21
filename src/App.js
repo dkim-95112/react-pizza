@@ -5,7 +5,7 @@ import {
   parseStepNameAndType,
   isStepActivated,
   getNextStep,
-} from "./Common";
+} from "./common";
 import {Input} from './Input'
 import {StepList} from "./StepList";
 
@@ -14,7 +14,7 @@ console.log('workflow: %o', workflow);
 class App extends React.Component {
   constructor(props) {
     super(props);
-    this.steps = [];
+    this.steps = []; // Reading only after init
     this.state = {
       stepNumber: 0,
       stepValues: [],
@@ -38,7 +38,8 @@ class App extends React.Component {
             prevStringOption = option
           }
           if (typeof option === 'object') {
-            // Assuming nested step object immediately follows string option
+            // Assuming nested step object immediately follows targeted option value
+            // Ie.  {options: ['option1', 'targeted option', nestedStepForPreviousValue]}
             pushStep({
               ...option,
               activatedBy: {
@@ -60,6 +61,7 @@ class App extends React.Component {
         case 'text':
           return '';
         case 'checkbox':
+          // Providing initial value for all checkboxes (controlled)
           return Array(s.options.length).fill('');
         default:
           console.error('shouldn\'t get here')
@@ -74,6 +76,7 @@ class App extends React.Component {
   }
 
   handleStepClick(stepNumber) {
+    // Updating step number and completed status
     const currentStep = this.steps[this.state.stepNumber]
     const inputType = parseStepNameAndType(currentStep.nameAndType).pop();
     const stepsCompleted = this.state.stepsCompleted.slice();
@@ -88,6 +91,7 @@ class App extends React.Component {
   }
 
   handleChange(event) {
+    // Handling select/radio/text input types
     console.log(`handleChange: value ${event.target.value} stepNumber ${this.state.stepNumber}`)
     const stepValues = this.state.stepValues.slice();
     stepValues[this.state.stepNumber] = event.target.value;
@@ -97,7 +101,7 @@ class App extends React.Component {
     this.setState({
       stepValues,
       stepsCompleted,
-      stepNumber: getNextStep(
+      stepNumber: getNextStep( // Automatically advancing step
         this.state.stepNumber, this.steps, stepValues
       )
     })
@@ -114,6 +118,7 @@ class App extends React.Component {
       e.target.value : ''
     stepValues[this.state.stepNumber] = stepValue
     const stepsCompleted = this.state.stepsCompleted.slice()
+    // Do not automatically advance step
     stepsCompleted[this.state.stepNumber] = true;
     this.setState({
       stepValues,

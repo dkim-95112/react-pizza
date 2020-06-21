@@ -1,13 +1,15 @@
 import React from "react";
-import {parseStepNameAndType} from "./Common";
+import {parseStepNameAndType} from "./common";
 
 export function Input(props) {
   const step = props.steps[props.stepNumber];
   const [stepName, inputType] = parseStepNameAndType(step.nameAndType);
+  // Ie. ['Sauce', 'select']
   console.log(`Input: name ${stepName}, type ${inputType}`)
   const stepValue = props.stepValues[props.stepNumber]
   const stepOptions = step.options && step.options.filter(
     // Using only the string type options
+    // Ie. ['Red sauce', 'White sauce']
     stepOption => typeof stepOption === 'string'
   )
   switch (inputType) {
@@ -24,7 +26,7 @@ export function Input(props) {
           >
             <option value="">--Make selection</option>
             {
-              stepOptions.map(stepOption => {
+              stepOptions.map(stepOption => { // Ie. 'Red sauce'
                 return (
                   <option
                     key={stepOption}
