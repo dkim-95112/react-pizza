@@ -28,8 +28,9 @@ class App extends React.Component {
 
   componentDidMount() {
     // Flattening nested steps
-    workflow.forEach((step) => {
-      this.steps.push(step)
+    const steps = [];
+    workflow.forEach(function pushStep(step) {
+      steps.push(step)
       if (step.options) {
         let prevStringOption;
         step.options.forEach(option => {
@@ -38,7 +39,7 @@ class App extends React.Component {
           }
           if (typeof option === 'object') {
             // Assuming nested step object immediately follows string option
-            this.steps.push({
+            pushStep({
               ...option,
               activatedBy: {
                 nameAndType: step.nameAndType,
@@ -49,7 +50,7 @@ class App extends React.Component {
         })
       }
     })
-    console.log('steps: ', this.steps)
+    console.log('steps: ', this.steps = steps)
     // Initializing step values
     const stepValues = this.steps.map(s => {
       const inputType = parseStepNameAndType(s.nameAndType).pop();

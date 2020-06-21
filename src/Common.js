@@ -10,10 +10,11 @@ export const isStepActivated = (stepNumber, steps, stepValues) => {
   const step = steps[stepNumber]
   if (step.activatedBy) {
     // Conditionally active
-    const targetIndex = steps.findIndex(
+    const targetStepNumber = steps.findIndex(
       s => s.nameAndType === step.activatedBy.nameAndType
     )
-    return stepValues[targetIndex] === step.activatedBy.value
+    return stepValues[targetStepNumber] === step.activatedBy.value &&
+      isStepActivated(targetStepNumber, steps, stepValues)
   }
   return true; // Otherwise active
 }

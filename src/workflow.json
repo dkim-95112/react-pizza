@@ -15,6 +15,13 @@
         "nameAndType": "Milk(radio)",
         "options": [
           "Dairy",
+          {
+            "nameAndType": "DairyFlavor(radio)",
+            "options": [
+              "Vanilla",
+              "Chocolate"
+            ]
+          },
           "Dairy-free"
         ]
       },
